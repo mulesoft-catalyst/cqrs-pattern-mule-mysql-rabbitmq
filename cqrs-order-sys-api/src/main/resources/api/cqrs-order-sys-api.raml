@@ -1,0 +1,106 @@
+#%RAML 1.0
+types:
+  orderLines:
+    items:
+      type: orderLine
+      
+  OrderResponse:
+    example:
+      strict: true
+      value:
+        status: Example
+    properties:
+      status:
+        example: Example
+        type: string
+  OrderRequest:
+    properties:
+      order:
+        type: Order
+
+  Order:
+    properties:
+      currency:
+        example: Example
+        type: string
+      subtotal:
+        example: 1.00
+        type: number
+        format: double
+      discountAmount:
+        example: 1.00
+        type: number
+        format: double
+      taxAmount:
+        example: 1.00
+        type: number
+        format: double
+      grandTotal:
+        example: 1.00
+        type: number
+        format: double
+      orderId:
+        example: Example
+        type: string
+      shippingAmount:
+        example: 1.00
+        type: number
+        format: double
+      customer_id:
+        example: 12
+        type: number
+        format: int
+      lineItems:
+        type: orderLines
+        items:
+          type: orderLine
+
+  
+  orderLine:
+    properties:
+      sku:
+        example: Example
+        type: string
+      name:
+        example: Example
+        type: string
+      description:
+        example: Example
+        type: string
+      category:
+        example: Example
+        type: string
+      unitPrice:
+        example: 1.00
+        type: number
+        format: double
+      salePrice:
+        example: 1.00
+        type: number
+        format: double
+      quantity:
+        example: 1
+        type: number
+        format: int
+      totalPrice:
+        example: 1.00
+        type: number
+        format: double
+title: CQRS Orders System API
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/425b1991-9b95-4a67-a050-d762137272b7/cqrs-orders-exp-api
+mediaType:
+  - application/json
+version: "1.0"
+protocols:
+  - HTTP
+/orders:
+  post:
+    displayName: create orders
+    body:
+      application/json:
+        type: OrderRequest
+    responses:
+      "202":
+        body:
+          type: OrderResponse
+

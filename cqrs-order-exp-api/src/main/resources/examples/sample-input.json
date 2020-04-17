@@ -1,0 +1,43 @@
+{
+	"customer": {
+		"firstName": "John",
+		"lastName": "Smith",
+		"age": 25,
+		"streetAddress": "21 2nd Street",
+		"city": "New York",
+		"state": "NY",
+		"postalCode": "10021",
+		"emailAddress": "example@example.com"
+	},
+	"order": {
+		"currency": "USD",
+		"subtotal": 35.98,
+		"discountAmount": 0,
+		"taxAmount": 0,
+		"grandTotal": 35.98,
+		"orderId": "123ABC",
+		"shippingAmount": 7.99,
+		"lineItems": [
+			{
+				"sku": "576879",
+				"name": "Shirt",
+				"description": "A super great description of the product",
+				"category": "Shirts > T-Shirts > Blue",
+				"unitPrice": 11.99,
+				"salePrice": 11.99,
+				"quantity": 2,
+				"totalPrice": 23.98
+			},
+			{
+				"sku": "1112296",
+				"name": "Fleece Jacket",
+				"description": "A well appointed Fleece jacket",
+				"category": "Jackets > Winter > Fleece",
+				"unitPrice": 65.99,
+				"salePrice": 55.5,
+				"quantity": 1,
+				"totalPrice": 55.5
+			}
+		]
+	}
+}

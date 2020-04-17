@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <apikit:config name="cqrs-order-sys-api-config" api="api/cqrs-order-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+
+	<flow name="cqrs-order-sys-api-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="cqrs-order-sys-api-config" />
+    </flow>
+    <flow name="post:\orders:application\json:cqrs-order-sys-api-config">
+		
+         <try doc:name="Try" doc:id="d0bb7cc6-cd78-4162-a045-938b3db0b530" transactionalAction="BEGIN_OR_JOIN">
+			<set-variable value="#[payload]" doc:name="Save Payload" doc:id="1f4d569d-1819-4c14-aa53-67ba878ef277" variableName="originalPayload" />
+			<db:insert doc:name="Insert into Order" doc:id="79c8371e-a9c5-4456-8798-4f67f11e8d03" config-ref="Database_Config" transactionalAction="ALWAYS_JOIN">
+			<db:sql>INSERT INTO order_header  
+( 
+  currency  
+, subtotal        
+, discount_amount 
+, taxAmount       
+, grandTotal      
+, order_number   
+, shipping_amount
+, customer_id    
+)
+VALUES (
+  :currency  
+, :subtotal        
+, :discount_amount 
+, :taxAmount       
+, :grandTotal      
+, :order_number   
+, :shipping_amount
+, :customer_id   
+);</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	         currency            : payload.order.currency,
+	         subtotal            : payload.order.subtotal, 
+           discount_amount     : payload.order.discountAmount,  
+           taxAmount           : payload.order.taxAmount,
+           grandTotal          : payload.order.grandTotal, 
+           order_number        : payload.order.orderId,
+           shipping_amount     : payload.order.shippingAmount,  
+           customer_id         : payload.order.customer_id  
+}]]]></db:input-parameters>
+		</db:insert>
+			<db:select doc:name="Retrieve Order ID" doc:id="2c5ee230-5ee2-4776-81ce-e8d8ab834e0b" config-ref="Database_Config">
+			<db:sql>SELECT order_header_id FROM order_header WHERE order_number = :order_id  LIMIT 1</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	order_id  : vars.originalPayload.order.orderId
+}]]]></db:input-parameters>
+		</db:select>
+			<ee:transform doc:name="JSONify DB response" doc:id="5a738014-bdb5-4966-8413-521ee5f28b72">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<set-variable value="#[payload[0].order_header_id]" doc:name="Save Order Header ID" doc:id="3a872e5b-41a0-42d5-817a-8448b63dd7b1" variableName="orderHeaderID" />
+			<ee:transform doc:name="Prepare Input for Bulk Insert" doc:id="18ad3e1a-6cd6-4767-a06f-e2cdbca2d826">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var origPayload = vars.originalPayload
+---
+origPayload.order.lineItems map((item, index) -> {
+     sku         : item.sku,
+     name        : item.name,
+     description : item.description,
+     categorty   : item.category,
+     unitPrice   : item.unitPrice,
+     salePrice   : item.salePrice,
+     quantity    : item.quantity,
+     totalPrice  : item.totalPrice,
+     order_header_id : payload[0].order_header_id
+    }
+ )]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<db:bulk-insert doc:name="Bulk insert into Order Lines" doc:id="75b39aaa-4e45-4405-9139-af80a522da8d" config-ref="Database_Config" transactionalAction="ALWAYS_JOIN">
+			<db:sql>INSERT INTO order_lines 
+(sku            
+, name           
+, description    
+, category       
+, unit_price     
+, sale_price     
+, quantity       
+, total_price    
+, order_header_id)
+VALUES
+(
+:sku        
+,:name       
+,:description
+,:categorty  
+,:unitPrice  
+,:salePrice  
+,:quantity   
+,:totalPrice 
+,:order_header_id
+)</db:sql>
+		</db:bulk-insert>
+			<ee:transform doc:name="Set Response" doc:id="6c42e48c-b098-4c09-aa20-9a8001be7333">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var order_header_id = vars.orderHeaderID
+output application/json
+
+---
+{
+	order_header_id : order_header_id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</try>
+    </flow>
+</mule>

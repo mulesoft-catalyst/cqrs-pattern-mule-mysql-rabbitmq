@@ -1,0 +1,12 @@
+{
+  "customer": {
+    "firstName": "Example",
+    "lastName": "Example",
+    "age": 1,
+    "streetAddress": "Example",
+    "city": "Example",
+    "state": "Example",
+    "postalCode": "Example",
+    "emailAddress": "Example"
+  }
+}

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="response" format="json">
+      <types:shape format="weave" example="examples/response.json"><![CDATA[%dw 2.0
+
+type response = Array<{|  order_number: String,   order_header_id: Number {"typeId": "int"},   taxAmount: Number {"typeId": "int"},   discount_amount: Number {"typeId": "int"},   shipping_amount: Number {"typeId": "double"},   subtotal: Number {"typeId": "double"},   grandTotal: Number {"typeId": "double"},   currency: String,   customer_id: Number {"typeId": "int"},   first_name: String,   last_name: String,   email: String|}> {"example": "[{\\\"order_number\\\":\\\"1000\\\",\\\"order_header_id\\\":1,\\\"taxAmount\\\":0,\\\"discount_amount\\\":0,\\\"shipping_amount\\\":7.99,\\\"subtotal\\\":35.98,\\\"grandTotal\\\":35.98,\\\"currency\\\":\\\"USD\\\",\\\"customer_id\\\":1,\\\"first_name\\\":\\\"John\\\",\\\"last_name\\\":\\\"Smith\\\",\\\"email\\\":\\\"example@example.com\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#236d3220-4186-4083-8728-baed559463ae">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

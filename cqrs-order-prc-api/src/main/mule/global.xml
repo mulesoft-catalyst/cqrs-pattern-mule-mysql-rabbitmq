@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	 xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" 
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="4df21f25-9222-4b3e-be7c-3d97670ced7a" file="configuration/config.yaml" />
+	
+	<amqp:config name="AMQP_Config" doc:name="AMQP Config" doc:id="81b84b13-32b4-40a7-b1b7-2be96cd96fb9" >
+		<amqp:connection host="${rabbitmq.host}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualHost}" username="${rabbitmq.username}" password="${rabbitmq.password}" />
+	</amqp:config>
+	<configuration doc:name="Configuration" doc:id="5edb84f7-80ec-4ccf-882b-9e48a1b207e3" defaultErrorHandler-ref="all-error-handler" />
+	
+	</mule>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <apikit:config name="cqrs-customer-sys-api-config" api="api/cqrs-customer-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+
+	<flow name="cqrs-customer-sys-api-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="cqrs-customer-sys-api-config" />
+    </flow>
+    <flow name="post:\customers:application\json:cqrs-customer-sys-api-config">
+		
+         <set-variable value="#[payload]" doc:name="Set Variable" doc:id="1f4d569d-1819-4c14-aa53-67ba878ef277" variableName="originalPayload"/>
+		<db:insert doc:name="Insert into Customers" doc:id="79c8371e-a9c5-4456-8798-4f67f11e8d03" config-ref="Database_Config">
+			<db:sql >INSERT INTO customer (first_name , last_name , age , street, city , state , postal_code , email)
+                      VALUES (:firstName,
+                              :lastName,
+                              :age,
+                              :streetAddress,
+                              :city,
+                              :state,
+                              :postalCode,
+                              :emailAddress
+                             );</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	       firstName : payload.customer.firstName,
+	       lastName  : payload.customer.lastName,
+           age       : payload.customer.age,
+           streetAddress       : payload.customer.streetAddress,
+           city       : payload.customer.city,
+           state       : payload.customer.state,
+           postalCode       : payload.customer.postalCode,
+           emailAddress       : payload.customer.emailAddress
+
+}]]]></db:input-parameters>
+		</db:insert>
+		<db:select doc:name="Retrieve Customer ID" doc:id="2c5ee230-5ee2-4776-81ce-e8d8ab834e0b" config-ref="Database_Config">
+			<db:sql >SELECT customer_id FROM customer WHERE last_name = :lastName and first_name = :firstName  LIMIT 1</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	lastName  : vars.originalPayload.customer.lastName,
+	firstName : vars.originalPayload.customer.firstName
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="0aaae514-f413-45f6-8631-6f567062099c" doc:name="Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	customer_id : payload[0].customer_id
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

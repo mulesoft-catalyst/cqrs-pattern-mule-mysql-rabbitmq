@@ -1,0 +1,26 @@
+
+  
+rabbitmq:
+  host: "localhost"
+  port: "5672"
+  virtualHost: "dev"
+  username: "guest"
+  password: "password"
+  orderqueue: "order-queue"
+
+api:
+  name: "cqrs-order-prc-api"
+
+retry:
+  threshold: "1"
+  ttl: "5"
+
+customerService:
+  host: "localhost"
+  port: "8082"
+  path: "cqrs-customer-sys-api/customers"
+  
+orderService:
+  host: "localhost"
+  port: "8085"
+  path: "cqrs-order-sys-api/orders"

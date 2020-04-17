@@ -1,0 +1,22 @@
+http:
+  port: "8081"
+  
+rabbitmq:
+  host: "localhost"
+  port: "5672"
+  virtualHost: "dev"
+  username: "guest"
+  password: "password"
+  orderexchange: "order-exchange"
+
+api:
+  name: "cqrs-order-exp-api"
+
+retry:
+  threshold: "1"
+  ttl: "5"
+
+orderDetailsService:
+  host: "localhost"
+  port: "8090"
+  path: "cqrs-order-details-sys-api/orders"

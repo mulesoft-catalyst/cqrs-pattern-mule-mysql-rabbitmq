@@ -1,0 +1,64 @@
+#%RAML 1.0
+types:
+
+  CustomerResponse:
+    example:
+      strict: true
+      value:
+        status: Example
+    properties:
+      status:
+        example: Example
+        type: string
+ 
+  Customer:
+    properties:
+      firstName:
+        example: Example
+        type: string
+      lastName:
+        example: Example
+        type: string
+      age:
+        example: 1
+        type: number
+        format: int
+      streetAddress:
+        example: Example
+        type: string
+      city:
+        example: Example
+        type: string
+      state:
+        example: Example
+        type: string
+      postalCode:
+        example: Example
+        type: string
+      emailAddress:
+        example: Example
+        type: string
+  CustomerRequest:
+    properties:
+      customer:
+        type: Customer
+
+
+title: CQRS Orders Experience API
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/425b1991-9b95-4a67-a050-d762137272b7/cqrs-orders-exp-api
+mediaType:
+  - application/json
+version: "1.0"
+protocols:
+  - HTTP
+/customers:
+  post:
+    displayName: create customer
+    body:
+      application/json:
+        type: CustomerRequest
+    responses:
+      "202":
+        body:
+          type: CustomerResponse
+

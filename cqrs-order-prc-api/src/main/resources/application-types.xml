@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="input-request" format="json">
+      <types:shape format="weave" example="example/sample-input.json"><![CDATA[%dw 2.0
+
+type input_request = {|
+  customer: {|
+    firstName: String, 
+    lastName: String, 
+    age: Number {"typeId": "int"}, 
+    streetAddress: String, 
+    city: String, 
+    state: String, 
+    postalCode: String, 
+    emailAddress: String
+  |}, 
+  order: {|
+    currency: String, 
+    subtotal: Number {"typeId": "double"}, 
+    discountAmount: Number {"typeId": "int"}, 
+    taxAmount: Number {"typeId": "int"}, 
+    grandTotal: Number {"typeId": "double"}, 
+    orderId: String, 
+    shippingAmount: Number {"typeId": "double"}, 
+    lineItems: Array<{|      sku: String,       name: String,       description: String,       category: String,       unitPrice: Number {"typeId": "double"},       salePrice: Number {"typeId": "double"},       quantity: Number {"typeId": "int"},       totalPrice: Number {"typeId": "double"}    |}>
+  |}
+|} {"example": "{\\\"customer\\\":{\\\"firstName\\\":\\\"John\\\",\\\"lastName\\\":\\\"Smith\\\",\\\"age\\\":25,\\\"streetAddress\\\":\\\"21 2nd Street\\\",\\\"city\\\":\\\"New York\\\",\\\"state\\\":\\\"NY\\\",\\\"postalCode\\\":\\\"10021\\\",\\\"emailAddress\\\":\\\"example@example.com\\\"},\\\"order\\\":{\\\"currency\\\":\\\"USD\\\",\\\"subtotal\\\":35.98,\\\"discountAmount\\\":0,\\\"taxAmount\\\":0,\\\"grandTotal\\\":35.98,\\\"orderId\\\":\\\"123ABC\\\",\\\"shippingAmount\\\":7.99,\\\"lineItems\\\":[{\\\"sku\\\":\\\"576879\\\",\\\"name\\\":\\\"Shirt\\\",\\\"description\\\":\\\"A super great description of the product\\\",\\\"category\\\":\\\"Shirts > T-Shirts > Blue\\\",\\\"unitPrice\\\":11.99,\\\"salePrice\\\":11.99,\\\"quantity\\\":2,\\\"totalPrice\\\":23.98},{\\\"sku\\\":\\\"1112296\\\",\\\"name\\\":\\\"Fleece Jacket\\\",\\\"description\\\":\\\"A well appointed Fleece jacket\\\",\\\"category\\\":\\\"Jackets > Winter > Fleece\\\",\\\"unitPrice\\\":65.99,\\\"salePrice\\\":55.5,\\\"quantity\\\":1,\\\"totalPrice\\\":55.5}]}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="customer-request" format="json">
+      <types:shape format="weave" example="example/customer-request.json"><![CDATA[%dw 2.0
+
+type customer_request = {|
+  customer: {|
+    firstName: String, 
+    lastName: String, 
+    age: Number {"typeId": "int"}, 
+    streetAddress: String, 
+    city: String, 
+    state: String, 
+    postalCode: String, 
+    emailAddress: String
+  |}
+|} {"example": "{\\\"customer\\\":{\\\"firstName\\\":\\\"Example\\\",\\\"lastName\\\":\\\"Example\\\",\\\"age\\\":1,\\\"streetAddress\\\":\\\"Example\\\",\\\"city\\\":\\\"Example\\\",\\\"state\\\":\\\"Example\\\",\\\"postalCode\\\":\\\"Example\\\",\\\"emailAddress\\\":\\\"Example\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="customer-response" format="json">
+      <types:shape format="weave" example="example/customer-response.json"><![CDATA[%dw 2.0
+
+type customer_response = {| customer_id: Number {"typeId": "int"} |} {"example": "{\\\"customer_id\\\":1000}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="order-request" format="json">
+      <types:shape format="weave" example="example/order-request.json"><![CDATA[%dw 2.0
+
+type order_request = {|
+  order: {|
+    currency: String, 
+    subtotal: Number {"typeId": "double"}, 
+    discountAmount: Number {"typeId": "int"}, 
+    taxAmount: Number {"typeId": "int"}, 
+    grandTotal: Number {"typeId": "double"}, 
+    orderId: String, 
+    shippingAmount: Number {"typeId": "double"}, 
+    customer_id: Number {"typeId": "int"}, 
+    lineItems: Array<{|      sku: String,       name: String,       description: String,       category: String,       unitPrice: Number {"typeId": "double"},       salePrice: Number {"typeId": "double"},       quantity: Number {"typeId": "int"},       totalPrice: Number {"typeId": "double"}    |}>
+  |}
+|} {"example": "{\\\"order\\\":{\\\"currency\\\":\\\"USD\\\",\\\"subtotal\\\":35.98,\\\"discountAmount\\\":0,\\\"taxAmount\\\":0,\\\"grandTotal\\\":35.98,\\\"orderId\\\":\\\"1002\\\",\\\"shippingAmount\\\":7.99,\\\"customer_id\\\":4,\\\"lineItems\\\":[{\\\"sku\\\":\\\"576879\\\",\\\"name\\\":\\\"Shirt\\\",\\\"description\\\":\\\"A super great description of the product\\\",\\\"category\\\":\\\"Shirts > T-Shirts > Blue\\\",\\\"unitPrice\\\":11.99,\\\"salePrice\\\":11.99,\\\"quantity\\\":2,\\\"totalPrice\\\":23.98},{\\\"sku\\\":\\\"1112296\\\",\\\"name\\\":\\\"Fleece Jacket\\\",\\\"description\\\":\\\"A well appointed Fleece jacket\\\",\\\"category\\\":\\\"Jackets > Winter > Fleece\\\",\\\"unitPrice\\\":65.99,\\\"salePrice\\\":55.5,\\\"quantity\\\":1,\\\"totalPrice\\\":55.5}]}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#a6f3c763-042d-46f8-b04c-a3cf41bc6f21">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="input-request"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="customer-request"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#c9c8e85d-8905-49b2-a99f-17015239ead6">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="customer-response"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="order-request"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

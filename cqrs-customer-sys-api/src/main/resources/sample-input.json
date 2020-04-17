@@ -1,0 +1,12 @@
+{
+	"customer": {
+		"firstName": "John",
+		"lastName": "Smith",
+		"age": 25,
+		"streetAddress": "21 2nd Street",
+		"city": "New York",
+		"state": "NY",
+		"postalCode": "10021",
+		"emailAddress": "example@example.com"
+	}
+}

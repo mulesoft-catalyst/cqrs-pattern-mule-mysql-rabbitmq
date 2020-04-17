@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
+    <apikit:config name="cqrs-order-exp-api-config" api="cqrs-order-exp-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ea7e4fcc-525f-4223-b63b-338e856c6196">
+        <http:request-connection host="${orderDetailsService.host}" port="${orderDetailsService.port}" />
+    </http:request-config>
+    <flow name="cqrs-order-exp-api-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="cqrs-order-exp-api-config" />
+    </flow>
+    <flow name="post:\orders:application\json:cqrs-order-exp-api-config">
+        <amqp:publish doc:name="publish-command" doc:id="3c39dfb7-743f-4236-840e-2da5d92143f9" config-ref="AMQP_Config" exchangeName="${rabbitmq.orderexchange}" sendCorrelationId="AUTO">
+            <amqp:routing-keys />
+            <amqp:message>
+                <amqp:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+  "x-retry-count": 0
+}]]]></amqp:headers>
+            </amqp:message>
+        </amqp:publish>
+        <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="0aaae514-f413-45f6-8631-6f567062099c" doc:name="Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Order Accepted"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\orders:cqrs-order-exp-api-config">
+        <http:request method="GET" doc:name="Request" doc:id="e6c40fe8-e66c-4141-98d3-863bc564d02d" config-ref="HTTP_Request_configuration" path="/${orderDetailsService.path}">
+            <http:query-params><![CDATA[#[output application/java
+---
+{
+	"OrderNumber" : attributes.queryParams.OrderNumber
+}]]]></http:query-params>
+        </http:request>
+		<logger level="INFO" message="get:\orders:cqrs-order-exp-api-config" />
+    </flow>
+</mule>

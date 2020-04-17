@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <apikit:config name="cqrs-order-exp-api-config" api="cqrs-order-exp-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="58b82099-a1d0-4f61-b21e-fc38e90a6da7" >
+		<http:request-connection host="${customerService.host}" port="${customerService.port}" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="833ca0df-d506-4a4b-8f32-85058e8a281e" >
+		<http:request-connection host="${orderService.host}" port="${orderService.port}" />
+	</http:request-config>
+	<flow name="cqrs-order-prc-api-main">
+        <amqp:listener doc:name="Listener" doc:id="793a4e5c-30b3-4f42-b301-e7bf7a52775a" config-ref="AMQP_Config" queueName="${rabbitmq.orderqueue}" ackMode="AUTO">
+			<amqp:response >
+				<amqp:properties />
+			</amqp:response>
+		</amqp:listener>
+		<set-variable value="#[payload]" doc:name="Save Payload" doc:id="186b3722-f997-45f5-a8fa-a3d729e7e537" variableName="originalPayload"/>
+		<ee:transform doc:name="Create Customer Payload" doc:id="a6f3c763-042d-46f8-b04c-a3cf41bc6f21" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	customer: {
+		firstName: payload.customer.firstName,
+		lastName: payload.customer.lastName,
+		age: payload.customer.age,
+		streetAddress: payload.customer.streetAddress,
+		city: payload.customer.city,
+		state: payload.customer.state,
+		postalCode: payload.customer.postalCode,
+		emailAddress: payload.customer.emailAddress
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Create Customer" doc:id="29909ae5-c59d-4b9a-a8c0-56d9d55c81af" config-ref="HTTP_Request_configuration" path="/${customerService.path}"/>
+		<ee:transform doc:name="Create Order Payload" doc:id="c9c8e85d-8905-49b2-a99f-17015239ead6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+var originalPayload = vars.originalPayload
+output application/json
+---
+{
+	order: {
+		currency: originalPayload.order.currency,
+		subtotal: originalPayload.order.subtotal,
+		discountAmount: originalPayload.order.discountAmount,
+		taxAmount: originalPayload.order.taxAmount,
+		grandTotal: originalPayload.order.grandTotal,
+		orderId: originalPayload.order.orderId,
+		shippingAmount: originalPayload.order.shippingAmount,
+		customer_id: payload.customer_id,
+		lineItems : originalPayload.order.lineItems map((item, index) -> 
+        item
+        )
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Create Order" doc:id="c9a2b84d-d26d-4776-b34c-f4548a4616d2" config-ref="HTTP_Request_configuration1" path="/${orderService.path}"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c42ec5e9-ac20-4204-b299-76525bea059a" message="#[payload]" />
+    </flow>
+</mule>

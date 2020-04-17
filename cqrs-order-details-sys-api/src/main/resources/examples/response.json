@@ -1,0 +1,15 @@
+[{
+"order_number": "1000",
+"order_header_id": 1,
+"taxAmount": 0,
+"discount_amount": 0,
+"shipping_amount": 7.99,
+"subtotal": 35.98,
+"grandTotal": 35.98,
+"currency": "USD",
+"customer_id": 1,
+"first_name": "John",
+"last_name": "Smith",
+"email": "example@example.com"
+}
+]

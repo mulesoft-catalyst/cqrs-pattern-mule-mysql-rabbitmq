@@ -1,0 +1,61 @@
+#%RAML 1.0
+types:
+  OrderDetails:
+    properties:
+      currency:
+        example: Example
+        type: string
+      subtotal:
+        example: 1.10
+        type: number
+        format: double
+      discountAmount:
+        example: 1.10
+        type: number
+        format: double
+      taxAmount:
+        example: 1.10
+        type: number
+        format: double
+      grandTotal:
+        example: 1.10
+        type: number
+        format: double
+      orderNumber:
+        example: Example
+        type: string
+      shippingAmount:
+        example: 1.10
+        type: number
+        format: double
+      CustomerLastName:
+        example: Example
+        type: string
+      CustomerFirstName:
+        example: Example
+        type: string
+      CustomerEmail:
+        example: Example
+        type: string
+     
+annotationTypes:
+  NewGroup:
+    type: any
+title: Order Details System API
+mediaType:
+  - application/json
+protocols:
+  - HTTP
+/orders:
+  get:
+    queryParameters:
+      OrderNumber:
+        example: "1000"
+        type: string
+    body: {}
+    responses:
+      "200":
+        body:
+          application/json:
+            type: OrderDetails
+

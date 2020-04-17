@@ -1,0 +1,18 @@
+http:
+  port: "8082"
+  
+api:
+  name: "cqrs-customer-sys-api"
+  
+mysql:
+  host: "localhost"
+  port: "3306"
+  user: "root"
+  password : "password"
+  database: "ecommerce"
+  customertable: "customer"
+
+retry:
+  threshold: "1"
+  ttl: "5"
+  

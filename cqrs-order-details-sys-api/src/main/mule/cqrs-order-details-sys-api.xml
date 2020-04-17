@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <apikit:config name="cqrs-order-details-sys-api-config" api="api/cqrs-order-details-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+   
+	<flow name="cqrs-order-details-sys-api-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="cqrs-order-details-sys-api-config" />
+    </flow>
+    <flow name="get:\orders:cqrs-order-details-sys-api-config">
+        <db:select doc:name="Retrieve Orders" doc:id="2c5ee230-5ee2-4776-81ce-e8d8ab834e0b" config-ref="Database_Config">
+			<db:sql>SELECT OH.*
+	  ,CUS.first_name
+      ,CUS.last_name
+      ,CUS.email
+  FROM order_header OH
+      ,customer CUS 
+ WHERE OH.order_number = :order_number 
+   AND OH.customer_id = CUS.customer_id ;</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	order_number  : attributes.queryParams.OrderNumber
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="236d3220-4186-4083-8728-baed559463ae" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	order_number: payload01.order_number default "",
+	order_header_id: payload01.order_header_id,
+	taxAmount: payload01.taxAmount default 0,
+	discount_amount: payload01.discount_amount default 0,
+	shipping_amount: payload01.shipping_amount default 0,
+	subtotal: payload01.subtotal default 0,
+	grandTotal: payload01.grandTotal default 0,
+	currency: payload01.currency default "",
+	customer_id: payload01.customer_id default 0,
+	first_name: payload01.first_name default "",
+	last_name: payload01.last_name default "",
+	email: payload01.email default ""
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" message="get:\orders:cqrs-order-details-sys-api-config" />
+    </flow>
+</mule>
