@@ -105,6 +105,7 @@ docker run -p 3306:3306 -p 33060:33060 --name mysql-server-master --net=groupnet
 
 * But If you really want to do it in a proper way continue as outlined in
   * **MSQL-Replication.md**
+  https://github.com/kprabhureddy/cqrs-pattern/blob/master/MSQL-Replication.md
 
 
 * Run the table creation scripts under docs/scripts folder to create the underlying tables (customer, order_header, order_lines). You can use SQLWorkbench tool to connect to MYSQL database and execute the script.
