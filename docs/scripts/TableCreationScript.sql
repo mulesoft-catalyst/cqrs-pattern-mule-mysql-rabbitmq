@@ -1,4 +1,4 @@
-CREATE TABLE customer
+CREATE TABLE ecommerce.customer
 (     customer_id INT NOT NULL AUTO_INCREMENT
     , first_name  VARCHAR(500)
     , last_name   VARCHAR(500)
@@ -11,7 +11,7 @@ CREATE TABLE customer
     , PRIMARY KEY (customer_id)
 );
 
-CREATE TABLE order_header
+CREATE TABLE ecommerce.order_header
 (     order_header_id INT NOT NULL AUTO_INCREMENT
     , currency         VARCHAR(500)
     , subtotal         DECIMAL(10,2)
@@ -25,7 +25,7 @@ CREATE TABLE order_header
 );
 
 
-CREATE TABLE order_lines
+CREATE TABLE ecommerce.order_lines
 (     order_line_id INT NOT NULL AUTO_INCREMENT
     , sku              VARCHAR(500)
     , name             VARCHAR(500)
